@@ -19,3 +19,14 @@ making the game class based!
    - a ball class with properties related to the ball only like its position, velocity,etc
    - a dash class with properties like moveleft, moveright, width, moveStep
    - a game class that controls the game and manipulates the ball and dash
+
+-- issues
+
+- Lack of Reusability:
+  If Game depends directly on getComputedStyle, you can’t reuse the class outside the browser or in non-visual environments (e.g., running simulations or headless testing).
+
+- Limited Flexibility:
+  You might want to change the way dimensions are handled — for example, allowing dynamic resizing or passing dimensions as configuration. Tight DOM coupling makes this harder.
+
+- Separation of Concerns:
+  Ideally, your game logic should be independent of how elements are rendered. The Ball, Dash, and Game should handle logic, and a separate class or method should handle rendering and DOM manipulation. This makes the code cleaner and easier to manage.

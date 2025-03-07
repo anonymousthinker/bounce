@@ -1,5 +1,11 @@
 class Game {
-  static #collision({ position }, dash, upperLimit, dashWidth, dashHeight) {
+  constructor(gameAreaWidth, ball, dash) {
+    this.gameAreaWidth = gameAreaWidth;
+    this.dashWidth = dash.width;
+    this.dashHeight = dash.height;
+    this.ballWidth = ball.size;
+  }
+  #collision({ position }, dash, upperLimit) {
     // V = V - 2 ( V ⋅ N ) N
     const padding = 50;
     if (position.xp === upperLimit) {
@@ -12,8 +18,8 @@ class Game {
       return [1, 1];
     }
     if (
-      position.yp === upperLimit - dashHeight &&
-      position.xp <= dash.position.left + dashWidth + padding &&
+      position.yp === upperLimit - this.dashHeight &&
+      position.xp <= dash.position.left + this.dashWidth + padding &&
       position.xp >= dash.position.left - padding
     ) {
       const velocities = [
@@ -24,48 +30,39 @@ class Game {
       return velocities[Math.floor(Math.random() * velocities.length)];
     }
   }
-  static moveBall(ball, dash) {
+  moveBall(ball, dash) {
     let ballVelocity = [2, -1];
-    const gameArea = document.getElementById("main-area");
-    const gameAreaWidth = parseFloat(window.getComputedStyle(gameArea).width);
-    const dashWidth = parseFloat(window.getComputedStyle(dash.element).width);
-    const dashHeight = parseFloat(window.getComputedStyle(dash.element).height);
-    const ballWidth = parseFloat(window.getComputedStyle(ball.element).width);
-    const upperLimit = gameAreaWidth - ballWidth;
+    const upperLimit = this.gameAreaWidth - this.ballWidth;
     setInterval(() => {
-      ballVelocity =
-        Game.#collision(ball, dash, upperLimit, dashWidth, dashHeight) ||
-        ballVelocity;
+      ballVelocity = this.#collision(ball, dash, upperLimit) || ballVelocity;
       [ball.velocity.xv, ball.velocity.yv] = ballVelocity;
 
-      if (ball.position.yp === 550) {
+      if (ball.position.yp === upperLimit) {
         clearInterval(intervalId);
-        outer.insertAdjacentHTML(
-          "afterbegin",
-          `<p id="game-over">GAME OVER</p>`
-        );
       }
       ball.position.xp += ball.velocity.xv;
       ball.position.yp += ball.velocity.yv;
       ball.render();
     }, 1);
   }
-  static moveDash(dash) {
+  moveDash(dash) {
     dash.element.addEventListener("keydown", (e) => {
       if (e.key === "a") {
         if (dash.position.left !== 0) dash.moveLeft();
       }
       if (e.key === "d") {
-        if (dash.position.left !== 500) dash.moveRight();
+        if (dash.position.left !== this.gameAreaWidth - this.dashWidth)
+          dash.moveRight();
       }
     });
   }
 }
 
 class Dash {
-  constructor(width, left, moveStep) {
+  constructor(width, height, left, moveStep) {
     this.position = { left };
     this.width = width;
+    this.height = height;
     this.moveStep = moveStep;
     this.element = Dash.makeDash(width);
   }
@@ -96,10 +93,11 @@ class Dash {
 }
 
 class Ball {
-  constructor(yp, xp, xv, yv) {
+  constructor(yp, xp, xv, yv, size) {
     this.position = { yp, xp };
     this.velocity = { xv, yv };
     this.element = Ball.makeBall();
+    this.size = size;
   }
 
   static makeBall() {
@@ -117,13 +115,14 @@ class Ball {
 }
 
 const main = () => {
-  const ball = new Ball(300, 280, 2, -1);
-  ball.render();
-  const dash = new Dash(100, 250, 50);
-  dash.render();
+  const ball = new Ball(300, 280, 2, -1, 50);
+  const dash = new Dash(100, 20, 250, 50);
   dash.element.focus();
-  Game.moveBall(ball, dash);
-  Game.moveDash(dash);
+  const gameArea = document.getElementById("main-area");
+  const gameAreaWidth = parseFloat(window.getComputedStyle(gameArea).width);
+  const game = new Game(gameAreaWidth, ball, dash);
+  game.moveBall(ball, dash);
+  game.moveDash(dash);
 };
 
 main();
